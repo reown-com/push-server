@@ -13,7 +13,7 @@ provider "aws" {
 }
 
 provider "grafana" {
-  url  = "https://${var.grafana_endpoint}"
+  url  = "https://${data.terraform_remote_state.monitoring.outputs.grafana_workspaces.central.grafana_endpoint}"
   auth = var.grafana_auth
 }
 

@@ -13,10 +13,6 @@ variable "public_url" {
   default = "echo.walletconnect.com"
 }
 
-variable "grafana_endpoint" {
-  type = string
-}
-
 variable "grafana_auth" {
   type = string
 }
