@@ -14,7 +14,13 @@ variable "public_url" {
 }
 
 variable "grafana_auth" {
-  type = string
+  type      = string
+  sensitive = true
+}
+
+variable "sla_grafana_auth" {
+  type      = string
+  sensitive = true
 }
 
 variable "image_version" {
