@@ -79,11 +79,7 @@ pub fn new_state(
     #[cfg(feature = "multitenant")]
     let jwt_secret = config.jwt_secret.clone();
 
-    let public_ip = match networking::find_public_ip_addr() {
-        Ok(ip) => Some(ip),
-        // Note: Should we pass this error back up?
-        Err(_e) => None,
-    };
+    let public_ip = networking::find_public_ip_addr().ok();
 
     Ok(AppState {
         config: config.clone(),
