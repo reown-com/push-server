@@ -175,6 +175,10 @@ impl PushProvider for ApnsProvider {
                             );
                             Err(Error::ApnsCertificateUnknownCA)
                         }
+                        dbg if dbg.contains("received fatal alert: CertificateExpired") => {
+                            info!("APNs certificate expired: debug:{dbg}, display: {client_error}");
+                            Err(Error::ApnsCertificateExpired)
+                        }
                         _ => Err(Error::Apns(e)),
                     }
                 }
