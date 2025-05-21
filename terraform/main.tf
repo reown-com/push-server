@@ -1,6 +1,6 @@
 locals {
   app_name    = "push"
-  environment = terraform.workspace
+  environment = var.environment
 
   fqdn        = local.environment == "prod" ? var.public_url : "${local.environment}.${var.public_url}"
   backup_fqdn = replace(local.fqdn, ".com", ".org")
@@ -80,7 +80,7 @@ module "database_cluster" {
 
   name           = "${local.environment}-${local.app_name}-database"
   engine         = "aurora-postgresql"
-  engine_version = "13.12"
+  engine_version = "13.18"
   engine_mode    = "provisioned"
   instance_class = "db.serverless"
   instances = {
@@ -114,7 +114,7 @@ module "tenant_database_cluster" {
 
   name           = "${local.environment}-${local.app_name}-tenant-database"
   engine         = "aurora-postgresql"
-  engine_version = "13.12"
+  engine_version = "13.18"
   engine_mode    = "provisioned"
   instance_class = "db.serverless"
   instances = {

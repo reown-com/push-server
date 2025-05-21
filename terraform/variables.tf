@@ -3,6 +3,11 @@ variable "region" {
   default = "eu-central-1"
 }
 
+variable "environment" {
+  type    = string
+  default = "staging"
+}
+
 variable "azs" {
   type    = list(string)
   default = ["eu-central-1a", "eu-central-1b", "eu-central-1c"]
@@ -14,11 +19,6 @@ variable "public_url" {
 }
 
 variable "grafana_auth" {
-  type      = string
-  sensitive = true
-}
-
-variable "sla_grafana_auth" {
   type      = string
   sensitive = true
 }
