@@ -5,17 +5,25 @@ locals {
   load_balancer = join("/", slice(split("/", var.load_balancer_arn), 1, 4))
 }
 
+module "monitoring-role" {
+  source          = "app.terraform.io/wallet-connect/monitoring-role/aws"
+  version         = "1.1.0"
+  context         = module.this
+  remote_role_arn = var.monitoring_role_arn
+}
+
 resource "grafana_data_source" "prometheus" {
   type = "prometheus"
   name = "${var.app_name}-amp"
   url  = "https://aps-workspaces.eu-central-1.amazonaws.com/workspaces/${var.prometheus_workspace_id}/"
 
   json_data_encoded = jsonencode({
-    httpMethod    = "GET"
-    manageAlerts  = false
-    sigV4Auth     = true
-    sigV4AuthType = "ec2_iam_role"
-    sigV4Region   = "eu-central-1"
+    httpMethod         = "GET"
+    manageAlerts       = false
+    sigV4Auth          = true
+    sigV4AuthType      = "ec2_iam_role"
+    sigV4Region        = "eu-central-1"
+    sigV4AssumeRoleArn = module.monitoring-role.iam_role_arn
   })
 }
 
@@ -25,6 +33,7 @@ resource "grafana_data_source" "cloudwatch" {
 
   json_data_encoded = jsonencode({
     defaultRegion = "eu-central-1"
+    assumeRoleArn = module.monitoring-role.iam_role_arn
   })
 }
 

@@ -192,6 +192,9 @@ module "monitoring" {
   load_balancer_arn       = module.ecs.load_balancer_arn
   environment             = local.environment
   notification_channels   = var.notification_channels
+
+  region              = var.region
+  monitoring_role_arn = data.terraform_remote_state.monitoring.outputs.grafana_workspaces.central.iam_role_arn
 }
 
 data "aws_ecr_repository" "repository" {
