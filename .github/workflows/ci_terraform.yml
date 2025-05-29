@@ -17,6 +17,9 @@ concurrency:
   # If there is already a workflow running for the same pull request, cancel it
   cancel-in-progress: ${{ github.event.type == 'PullRequest' }}
 
+permissions:
+  contents: write
+
 jobs:
   check-fmt:
     runs-on: ubuntu-latest
@@ -81,9 +84,6 @@ jobs:
     needs:
       - get-version
     runs-on: ubuntu-latest
-    permissions:
-      contents: 'read'
-      pull-requests: 'write'
     environment:
       name: staging
       url: https://staging.echo.walletconnect.com/health

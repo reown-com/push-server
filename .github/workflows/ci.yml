@@ -142,7 +142,7 @@ jobs:
         continue-on-error: false
 
       - name: Cache sccache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         continue-on-error: false
         with:
           path: ${{ matrix.sccache-path }}
