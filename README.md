@@ -10,7 +10,8 @@ This list contains both supported and potentially planned providers
 - [ ] Web Push
 
 ## Supporting Notifications
-> **Note** Full documentation will be available soon. This is only a brief overview.
+> [!Note]
+> Full documentation will be available soon. This is only a brief overview.
 
 There are 3 options for receiving notifications within your wallet:
 1. **Use the hosted platform.**
@@ -31,7 +32,7 @@ generated. By sending a POST request to `<INSTANCE_URL>/clients` as per the [spe
 Echo Server supports multi-tenancy. To enable multi-tenancy you need to specify a `TENANT_DATABASE_URL` which will then disable
 the single-tenant endpoints in favour of endpoints with a `/:tenant_id` prefix e.g. `/:tenant_id/client/:id`
 
-> **Warning**
+> [!Warning]
 > The `TENANT_DATABASE_URL` **must** point to a different database than the `DATABASE_URL`
 
 ## Running locally
