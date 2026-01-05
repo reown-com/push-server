@@ -48,7 +48,21 @@ dashboard.new(
 )
 .addPanels(layout.generate_grid([
   //////////////////////////////////////////////////////////////////////////////
-  row.new('Application'),
+  row.new('Notifications'),
+  panels.app.notifications_rate(ds, vars) { gridPos: pos._6 },
+  panels.app.notifications_sent_rate(ds, vars) { gridPos: pos._6 },
+
+  //////////////////////////////////////////////////////////////////////////////
+  row.new('Registrations & Tenants'),
+  panels.app.registrations_rate(ds, vars) { gridPos: pos._6 },
+  panels.app.tenant_updates_rate(ds, vars) { gridPos: pos._6 },
+
+  //////////////////////////////////////////////////////////////////////////////
+  row.new('Suspensions'),
+  panels.app.suspensions_rate(ds, vars) { gridPos: pos._12 },
+
+  //////////////////////////////////////////////////////////////////////////////
+  row.new('Database'),
   panels.app.postgres_query_rate(ds, vars) { gridPos: pos._6 },
   panels.app.postgres_query_latency(ds, vars) { gridPos: pos._6 },
 ]))
