@@ -96,7 +96,7 @@ serial_test = "1.0"
 test-context = "0.1"
 futures-util = "0.3"
 random-string = "1.0"
-rand = "0.8"
+rand = "0.9"
 ed25519-dalek = { version = "2.1.1", features = ["rand_core"] }
 
 [build-dependencies]
