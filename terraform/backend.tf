@@ -19,8 +19,11 @@ terraform {
       version = "~> 4.31"
     }
     grafana = {
-      source  = "grafana/grafana"
-      version = ">= 2.1"
+      source = "grafana/grafana"
+      # Bumped from ">= 2.1"/module "~> 2.0" (lock 2.19.0) for the AMG -> Grafana Cloud
+      # dual-run: the aliased grafana.cloud + grafana_assume_role datasources need a modern
+      # provider. Resource types used (data_source/dashboard) are stable 2.x->4.x.
+      version = ">= 3.0, < 5.0"
     }
     random = {
       source  = "hashicorp/random"
