@@ -136,7 +136,12 @@ resource "aws_iam_role_policy" "grafana_cloud_amp_read" {
 resource "grafana_data_source" "cloud_prometheus" {
   provider = grafana.cloud
 
-  type = "prometheus"
+  # Amazon Managed Prometheus datasource plugin, NOT the plain "prometheus" type. On
+  # Grafana Cloud only this type performs the AWS SigV4 grafana_assume_role into our
+  # account to query AMP; a plain "prometheus" datasource returns 403 (no assume-role),
+  # so the dashboard's AMP panels show no data. Matches every working AMP reader on Cloud
+  # (prod-pay-core-amp, staging-blockchain-api-amp, central cloudflare/supabase, mx-*).
+  type = "grafana-amazonprometheus-datasource"
   name = "${var.app_name}-amp"
   url  = "https://aps-workspaces.eu-central-1.amazonaws.com/workspaces/${var.prometheus_workspace_id}/"
   uid  = local.cloud_prometheus_uid
@@ -144,10 +149,13 @@ resource "grafana_data_source" "cloud_prometheus" {
   json_data_encoded = jsonencode({
     httpMethod         = "GET"
     manageAlerts       = false
+    authType           = "grafana_assume_role"
+    assumeRoleArn      = aws_iam_role.grafana_cloud.arn
+    defaultRegion      = "eu-central-1"
     sigV4Auth          = true
     sigV4AuthType      = "grafana_assume_role"
-    sigV4Region        = "eu-central-1"
     sigV4AssumeRoleArn = aws_iam_role.grafana_cloud.arn
+    sigV4Region        = "eu-central-1"
   })
 
   depends_on = [aws_iam_role_policy.grafana_cloud_amp_read]
