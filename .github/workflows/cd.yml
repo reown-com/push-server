@@ -63,17 +63,6 @@ jobs:
         with:
           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
-      - name: Get Grafana details
-        id: grafana-get-details
-        uses: WalletConnect/actions/aws/grafana/get-details/@1.0.3
-
-      - name: Get Grafana key
-        id: grafana-get-key
-        uses: WalletConnect/actions/aws/grafana/get-key/@1.0.3
-        with:
-          key-prefix: ${{ github.event.repository.name }}
-          workspace-id: ${{ steps.grafana-get-details.outputs.workspace-id }}
-
       - name: Init Terraform
         id: tf-init
         uses: WalletConnect/actions/terraform/init/@1.0.3
@@ -84,21 +73,11 @@ jobs:
         id: tf-apply
         uses: WalletConnect/actions/terraform/apply/@1.0.3
         env:
-          TF_VAR_grafana_auth: ${{ steps.grafana-get-key.outputs.key }}
-          TF_VAR_grafana_endpoint: ${{ steps.grafana-get-details.outputs.endpoint }}
           TF_VAR_jwt_secret: ${{ secrets.STAGING_JWT_SECRET }}
           TF_VAR_image_version: ${{ inputs.image_tag }}
           TF_VAR_relay_public_key: ${{ secrets.RELAY_PUBLIC_KEY }}
         with:
           environment: "staging"
-
-      - name: Delete Grafana key
-        id: grafana-delete-key
-        uses: WalletConnect/actions/aws/grafana/delete-key/@1.0.3
-        if: ${{ success() || failure() || cancelled() }} # don't use always() since it creates non-cancellable jobs
-        with:
-          key-name: ${{ steps.grafana-get-key.outputs.key-name }}
-          workspace-id: ${{ steps.grafana-get-details.outputs.workspace-id }}
 
   validate_staging:
     if: ${{ inputs.deploy_to_staging }}
@@ -136,17 +115,6 @@ jobs:
         with:
           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
-      - name: Get Grafana details
-        id: grafana-get-details
-        uses: WalletConnect/actions/aws/grafana/get-details/@1.0.3
-
-      - name: Get Grafana key
-        id: grafana-get-key
-        uses: WalletConnect/actions/aws/grafana/get-key/@1.0.3
-        with:
-          key-prefix: ${{ github.event.repository.name }}
-          workspace-id: ${{ steps.grafana-get-details.outputs.workspace-id }}
-
       - name: Init Terraform
         id: tf-init
         uses: WalletConnect/actions/terraform/init/@1.0.3
@@ -157,18 +125,8 @@ jobs:
         id: tf-apply
         uses: WalletConnect/actions/terraform/apply/@1.0.3
         env:
-          TF_VAR_grafana_auth: ${{ steps.grafana-get-key.outputs.key }}
-          TF_VAR_grafana_endpoint: ${{ steps.grafana-get-details.outputs.endpoint }}
           TF_VAR_jwt_secret: ${{ secrets.PROD_JWT_SECRET }}
           TF_VAR_image_version: ${{ inputs.image_tag }}
           TF_VAR_relay_public_key: ${{ secrets.RELAY_PUBLIC_KEY }}
         with:
           environment: "prod"
-
-      - name: Delete Grafana key
-        id: grafana-delete-key
-        uses: WalletConnect/actions/aws/grafana/delete-key/@1.0.3
-        if: ${{ success() || failure() || cancelled() }} # don't use always() since it creates non-cancellable jobs
-        with:
-          key-name: ${{ steps.grafana-get-key.outputs.key-name }}
-          workspace-id: ${{ steps.grafana-get-details.outputs.workspace-id }}

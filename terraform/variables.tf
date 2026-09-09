@@ -23,6 +23,19 @@ variable "grafana_auth" {
   sensitive = true
 }
 
+# AMG -> Grafana Cloud migration dual-run: the aliased grafana.cloud provider (provider.tf).
+variable "grafana_cloud_url" {
+  description = "Grafana Cloud stack URL (Main Org, prod-eu-west-2)."
+  type        = string
+  default     = "https://walletconnect.grafana.net"
+}
+
+variable "grafana_cloud_token" {
+  description = "Grafana Cloud service-account token for the aliased grafana.cloud provider. Distinct from var.grafana_auth (AMG). Set as a SENSITIVE TFC workspace variable."
+  type        = string
+  sensitive   = true
+}
+
 variable "image_version" {
   type    = string
   default = ""

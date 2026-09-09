@@ -187,11 +187,20 @@ module "ecs" {
 module "monitoring" {
   source = "./monitoring"
 
-  app_name                = "${local.environment}-${local.app_name}"
-  prometheus_workspace_id = aws_prometheus_workspace.prometheus.id
-  load_balancer_arn       = module.ecs.load_balancer_arn
-  environment             = local.environment
-  notification_channels   = var.notification_channels
+  # AMG -> Grafana Cloud migration dual-run: pass the aliased grafana.cloud (aliased
+  # providers are never auto-inherited). default grafana -> AMG, grafana.cloud -> Cloud.
+  # The default aws (wc-main) is inherited automatically.
+  providers = {
+    grafana       = grafana
+    grafana.cloud = grafana.cloud
+  }
+
+  app_name                 = "${local.environment}-${local.app_name}"
+  prometheus_workspace_id  = aws_prometheus_workspace.prometheus.id
+  prometheus_workspace_arn = aws_prometheus_workspace.prometheus.arn
+  load_balancer_arn        = module.ecs.load_balancer_arn
+  environment              = local.environment
+  notification_channels    = var.notification_channels
 
   region              = var.region
   monitoring_role_arn = data.terraform_remote_state.monitoring.outputs.grafana_workspaces.central.iam_role_arn
