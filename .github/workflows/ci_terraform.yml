@@ -113,6 +113,20 @@ jobs:
         with:
           environment: staging
 
+      # Remote-execution workspaces ignore runner-side TF_VAR_*, but *.auto.tfvars.json
+      # is part of the uploaded configuration and is read by the remote run. jwt_secret
+      # and relay_public_key are not set on the TFC workspace (grafana_auth and
+      # grafana_cloud_token are), so inject them here — the ci_workflows tf-vars
+      # pattern, with jq for correct escaping. Git ignores *.tfvars.json.
+      - name: Configure Terraform Variables
+        working-directory: terraform
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          RELAY_PUBLIC_KEY: ${{ secrets.RELAY_PUBLIC_KEY }}
+        run: |
+          jq -n --arg jwt "$JWT_SECRET" --arg relay "$RELAY_PUBLIC_KEY" \
+            '{jwt_secret: $jwt, relay_public_key: $relay}' > plan.auto.tfvars.json
+
       # Not WalletConnect/actions/terraform/plan: it runs `plan -out=/tmp/plan.tfplan`,
       # and the remote backend refuses to save a plan locally ("Saving a generated plan
       # is currently not supported") because echo-server-* are remote-execution
