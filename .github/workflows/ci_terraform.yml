@@ -113,12 +113,24 @@ jobs:
         with:
           environment: staging
 
+      # Not WalletConnect/actions/terraform/plan: it runs `plan -out=/tmp/plan.tfplan`,
+      # and the remote backend refuses to save a plan locally ("Saving a generated plan
+      # is currently not supported") because echo-server-* are remote-execution
+      # workspaces. Plan inline instead, as ci_workflows/ci-plan-infra.yml does. All
+      # variables come from the TFC workspace, so no -var-file and no TF_VAR_* here.
       - name: Run Terraform Plan
         id: tf-plan-staging
-        uses: WalletConnect/actions/terraform/plan/@2.5.4
         env:
-          TF_VAR_jwt_secret: ${{ secrets.JWT_SECRET }}
-          TF_VAR_relay_public_key: ${{ secrets.RELAY_PUBLIC_KEY }}
+          TF_WORKSPACE: staging
+          TF_IN_AUTOMATION: "true"
+        run: |
+          set -o pipefail
+          terraform -chdir=terraform plan -no-color 2>&1 | tee /tmp/plan_output.txt
+
+      - name: Upload Plan Output
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          environment: staging
+          name: terraform-plan-staging
+          path: /tmp/plan_output.txt
+          retention-days: 1
