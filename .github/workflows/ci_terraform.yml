@@ -51,33 +51,22 @@ jobs:
     outputs:
       version: ${{ steps.clean_version.outputs.version }}
     steps:
-      #TODO: Authenticate to avoid API rate limit exceeded errors.
+      # Replaces pozetroninc/github-action-get-latest-release@master, which queries the
+      # API unauthenticated and 403s on the shared per-IP limit (the TODO that used to
+      # sit here). gh is preinstalled and GITHUB_TOKEN gets the authenticated quota;
+      # `gh release view` skips drafts, as `excludes: draft` did.
       - name: Get latest release for image version
-        id: latest_release
-        uses: pozetroninc/github-action-get-latest-release@master
-        with:
-          repository: ${{ github.repository }}
-          excludes: draft
-
-      - name: Get release value
-        id: get_value
-        uses: actions/github-script@v6
-        env:
-          LATEST_TAG: ${{ steps.latest_release.outputs.release }}
-        with:
-          result-encoding: string
-          script: |
-            if (context.eventName == "release") {
-              return context.payload.release.tag_name
-            } else {
-              return process.env.LATEST_TAG
-            }
-
-      - name: Clean version
         id: clean_version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ github.event_name == 'release' && github.event.release.tag_name || '' }}
         run: |
-          version=$(echo "${{ steps.get_value.outputs.result }}" | sed 's/v//g')
-          echo "version=$version" >> $GITHUB_OUTPUT
+          set -euo pipefail
+          tag="$RELEASE_TAG"
+          if [ -z "$tag" ]; then
+            tag=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName)
+          fi
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
 
   plan-staging:
     if: github.event_name == 'pull_request'
