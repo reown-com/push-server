@@ -77,8 +77,6 @@ impl TestContext for ConfigContext {
             #[cfg(not(feature = "multitenant"))]
             apns_topic: None,
             #[cfg(not(feature = "multitenant"))]
-            fcm_api_key: None,
-            #[cfg(not(feature = "multitenant"))]
             fcm_v1_credentials: None,
             #[cfg(any(feature = "analytics", feature = "geoblock"))]
             s3_endpoint: None,

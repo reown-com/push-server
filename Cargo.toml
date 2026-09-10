@@ -57,7 +57,7 @@ atty = "0.2"
 
 # Push
 a2 = { version = "0.10.0", features = ["tracing", "openssl"] }
-fcm = "0.9"
+# The legacy `fcm` crate is gone with the legacy HTTP API it spoke.
 # fcm_v1 = { git = "https://github.com/rj76/fcm-rust.git", package = "fcm" }
 fcm_v1 = { git = "https://github.com/WalletConnect/fcm-rust.git", package = "fcm", branch = "feat/key-not-from-file", default-features = false, features = ["native-tls"] } # TODO use above version once released
 

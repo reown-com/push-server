@@ -3,8 +3,8 @@ Push server for the WalletConnect V2 Protocol
 
 ## Notification Providers
 This list contains both supported and potentially planned providers
-- [x] FCM (API Key)
 - [x] FCM V1 (Google Service Accounts)
+- [ ] ~~FCM (legacy API Key)~~ retired: Google decommissioned the legacy FCM HTTP API in June 2024
 - [x] APNS (Certificate Based)
 - [x] APNS (Token Based)
 - [ ] Web Push
@@ -21,7 +21,7 @@ There are 3 options for receiving notifications within your wallet:
 3. Write your own implementation that follows the [spec](https://docs.walletconnect.com/2.0/specs/servers/echo/echo-server-api)
 
 When using the hosted platform or self-hosting this implementation you have to provide the instance
-you FCM API Key or APNS certificates and then - following the FCM/APNS docs - add support for that within your
+your FCM v1 service account credentials or APNS certificates and then - following the FCM/APNS docs - add support for that within your
 wallet.
 
 You also have to register the device with the instance of Echo Server once when the client_id is initially

@@ -1,16 +1,11 @@
 pub mod apns;
-pub mod fcm;
 pub mod fcm_v1;
 #[cfg(any(debug_assertions, test))]
 pub mod noop;
 
 use {
     self::fcm_v1::FcmV1Provider,
-    crate::{
-        blob::ENCRYPTED_FLAG,
-        error,
-        providers::{apns::ApnsProvider, fcm::FcmProvider},
-    },
+    crate::{blob::ENCRYPTED_FLAG, error, providers::apns::ApnsProvider},
     async_trait::async_trait,
     relay_rpc::rpc::msg_id::get_message_id,
     serde::{Deserialize, Serialize},
@@ -154,7 +149,6 @@ impl TryFrom<&str> for ProviderKind {
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone)]
 pub enum Provider {
-    Fcm(FcmProvider),
     FcmV1(FcmV1Provider),
     Apns(ApnsProvider),
     #[cfg(any(debug_assertions, test))]
@@ -166,7 +160,6 @@ impl PushProvider for Provider {
     #[instrument(name = "send_notification")]
     async fn send_notification(&self, token: String, body: PushMessage) -> error::Result<()> {
         match self {
-            Provider::Fcm(p) => p.send_notification(token, body).await,
             Provider::FcmV1(p) => p.send_notification(token, body).await,
             Provider::Apns(p) => p.send_notification(token, body).await,
             #[cfg(any(debug_assertions, test))]
