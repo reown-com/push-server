@@ -69,15 +69,29 @@ jobs:
         with:
           environment: "staging"
 
+      # echo-server-* are TFC remote-execution workspaces, which ignore runner-side
+      # TF_VAR_*; a *.auto.tfvars.json file ships with the uploaded configuration and is
+      # read by the run. image_version matters here: left unset, coalesce() in main.tf
+      # falls back to the latest release instead of the image just built.
+      - name: Configure Terraform Variables
+        working-directory: terraform
+        env:
+          JWT_SECRET: ${{ secrets.STAGING_JWT_SECRET }}
+          RELAY_PUBLIC_KEY: ${{ secrets.RELAY_PUBLIC_KEY }}
+          IMAGE_VERSION: ${{ inputs.image_tag }}
+        run: |
+          jq -n --arg jwt "$JWT_SECRET" --arg relay "$RELAY_PUBLIC_KEY" --arg version "$IMAGE_VERSION" \
+            '{jwt_secret: $jwt, relay_public_key: $relay, image_version: $version}' > apply.auto.tfvars.json
+
+      # Inline rather than WalletConnect/actions/terraform/apply: that action passes
+      # -var-file, which is not how variables reach a remote run. Matches the plan job
+      # in ci_terraform.yml and keys-server's sub-infra-apply.yml.
       - name: Deploy Terraform to Staging
         id: tf-apply
-        uses: WalletConnect/actions/terraform/apply/@1.0.3
         env:
-          TF_VAR_jwt_secret: ${{ secrets.STAGING_JWT_SECRET }}
-          TF_VAR_image_version: ${{ inputs.image_tag }}
-          TF_VAR_relay_public_key: ${{ secrets.RELAY_PUBLIC_KEY }}
-        with:
-          environment: "staging"
+          TF_WORKSPACE: staging
+          TF_IN_AUTOMATION: "true"
+        run: terraform -chdir=terraform apply -auto-approve -no-color
 
   validate_staging:
     if: ${{ inputs.deploy_to_staging }}
