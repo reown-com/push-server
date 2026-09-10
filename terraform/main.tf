@@ -78,11 +78,15 @@ module "database_cluster" {
   source  = "terraform-aws-modules/rds-aurora/aws"
   version = "7.7.0"
 
-  name           = "${local.environment}-${local.app_name}-database"
-  engine         = "aurora-postgresql"
-  engine_version = "13.18"
-  engine_mode    = "provisioned"
-  instance_class = "db.serverless"
+  name   = "${local.environment}-${local.app_name}-database"
+  engine = "aurora-postgresql"
+  # Pinned to what the cluster actually runs. AWS auto-upgraded it to 13.23 while this
+  # still said 13.18, so every plan queued an engine_version rollback. Minor upgrades
+  # are a deliberate bump here now, otherwise the drift comes straight back.
+  engine_version             = "13.23"
+  auto_minor_version_upgrade = false
+  engine_mode                = "provisioned"
+  instance_class             = "db.serverless"
   instances = {
     1 = {}
   }
@@ -112,11 +116,13 @@ module "tenant_database_cluster" {
   source  = "terraform-aws-modules/rds-aurora/aws"
   version = "7.7.0"
 
-  name           = "${local.environment}-${local.app_name}-tenant-database"
-  engine         = "aurora-postgresql"
-  engine_version = "13.18"
-  engine_mode    = "provisioned"
-  instance_class = "db.serverless"
+  name   = "${local.environment}-${local.app_name}-tenant-database"
+  engine = "aurora-postgresql"
+  # See database_cluster above: pinned to the running version, auto minor upgrades off.
+  engine_version             = "13.23"
+  auto_minor_version_upgrade = false
+  engine_mode                = "provisioned"
+  instance_class             = "db.serverless"
   instances = {
     1 = {}
   }
