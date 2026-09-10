@@ -11,7 +11,7 @@ use {
     },
     hyper::StatusCode,
     std::sync::Arc,
-    tracing::{debug, error, instrument},
+    tracing::{error, instrument},
 };
 
 #[instrument(skip_all, name = "delete_fcm_v1_handler")]

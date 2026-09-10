@@ -3,10 +3,10 @@
 # Install cargo-chef
 #
 ################################################################################
-FROM               rust:buster AS chef
+FROM               rust:bookworm AS chef
 
 WORKDIR             /app
-RUN                 cargo install cargo-chef
+RUN                 cargo install cargo-chef --locked
 
 ################################################################################
 #
@@ -58,7 +58,7 @@ RUN                 cargo build --bin echo-server --release --features multitena
 # Runtime image
 #
 ################################################################################
-FROM               debian:buster-slim AS runtime
+FROM               debian:bookworm-slim AS runtime
 
 COPY --from=build   /tini /tini
 
