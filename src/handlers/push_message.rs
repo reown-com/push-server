@@ -56,7 +56,7 @@ pub async fn handler(
             warn!("error handling push message: {error:?}");
 
             #[cfg(feature = "analytics")]
-            let error_str = format!("{:?}", &error);
+            let error_str = format!("{:?}", error);
             let res = error.into_response();
             let status_code = res.status().clone().as_u16();
 

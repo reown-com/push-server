@@ -77,6 +77,13 @@ pub async fn handler(
     }
 
     // ---- checks
+    // NOTE: this validates nothing any more. Google decommissioned the legacy FCM HTTP
+    // API in June 2024, so the dry-run send below fails with 404 for every key, valid
+    // or not, and only FcmError::Unauthorized (401) maps to BadFcmApiKey — so any key
+    // is accepted and stored, and a suspended tenant is restored on it. The legacy
+    // provider in src/providers/fcm.rs sends through the same dead endpoint. Fixing
+    // this properly means dropping legacy FCM in favour of the v1 path, which is a
+    // product decision; see tenant_update_fcm_bad in tests/functional/multitenant/fcm.rs.
     let fcm_api_key = body.api_key.clone();
     let mut test_message_builder = fcm::MessageBuilder::new(&fcm_api_key, "wc-notification-test");
     test_message_builder.dry_run(true);
