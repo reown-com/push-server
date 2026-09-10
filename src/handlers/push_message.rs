@@ -469,10 +469,14 @@ pub async fn handler_internal(
                     );
                     Err(Error::TenantSuspended)
                 }
-                Error::BadFcmApiKey => {
+                // Only a legacy FCM server key on file, which can no longer deliver.
+                // Suspend so it stops being retried and shows up as needing action;
+                // registering FCM v1 credentials restores the tenant.
+                Error::LegacyFcmApiRetired => {
+                    let reason = "Legacy FCM credentials, migrate to FCM v1";
                     state
                         .tenant_store
-                        .suspend_tenant(&tenant_id, "Invalid FCM Credentials")
+                        .suspend_tenant(&tenant_id, reason)
                         .await
                         .map_err(|e| (e, analytics.clone()))?;
                     increment_counter!(state.metrics, tenant_suspensions);
@@ -481,7 +485,7 @@ pub async fn handler_internal(
                         client_id = %client_id,
                         notification_id = %notification.id,
                         push_type = client.push_type.as_str(),
-                        "tenant has been suspended due to invalid provider credentials"
+                        "tenant has been suspended due to: {reason}"
                     );
                     Err(Error::TenantSuspended)
                 }
@@ -501,7 +505,6 @@ pub async fn handler_internal(
 
     // Provider specific metrics
     match provider {
-        Provider::Fcm(_) => increment_counter!(state.metrics, sent_fcm_notifications),
         Provider::FcmV1(_) => increment_counter!(state.metrics, sent_fcm_v1_notifications),
         Provider::Apns(_) => increment_counter!(state.metrics, sent_apns_notifications),
         #[cfg(any(debug_assertions, test))]

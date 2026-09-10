@@ -9,9 +9,8 @@ use {
         },
         providers::{
             apns::ApnsProvider,
-            fcm::FcmProvider,
             fcm_v1::FcmV1Provider,
-            Provider::{self, Apns, Fcm, FcmV1},
+            Provider::{self, Apns, FcmV1},
             ProviderKind,
         },
     },
@@ -149,7 +148,9 @@ impl Tenant {
             supported.push(ProviderKind::ApnsSandbox);
         }
 
-        if self.fcm_api_key.is_some() || self.fcm_v1_credentials.is_some() {
+        // Deliberately not self.fcm_api_key: a legacy-only tenant cannot receive FCM
+        // notifications any more, so advertising the provider would be a lie.
+        if self.fcm_v1_credentials.is_some() {
             supported.push(ProviderKind::Fcm);
         }
 
@@ -275,12 +276,11 @@ impl Tenant {
                         .await;
                     Ok(fcm)
                 }
-                None => match self.fcm_api_key.clone() {
-                    Some(api_key) => {
-                        debug!("fcm provider is matched");
-                        let fcm = FcmProvider::new(api_key);
-                        Ok(Fcm(fcm))
-                    }
+                // A tenant holding only a legacy server key has no working FCM path:
+                // the legacy HTTP API it would send through is decommissioned. Report
+                // that instead of building a provider whose every send answers 404.
+                None => match self.fcm_api_key {
+                    Some(_) => Err(Error::LegacyFcmApiRetired),
                     None => Err(ProviderNotAvailable(provider.into())),
                 },
             },
@@ -541,7 +541,8 @@ impl DefaultTenantStore {
     pub fn new(config: Arc<Config>) -> Result<DefaultTenantStore> {
         Ok(DefaultTenantStore(Tenant {
             id: DEFAULT_TENANT_ID.to_string(),
-            fcm_api_key: config.fcm_api_key.clone(),
+            // Legacy FCM is retired; single-tenant deployments configure FCM v1.
+            fcm_api_key: None,
             fcm_v1_credentials: config.fcm_v1_credentials.clone(),
             apns_type: config.apns_type,
             apns_topic: config.apns_topic.clone(),

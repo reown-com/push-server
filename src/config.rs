@@ -59,8 +59,8 @@ pub struct Config {
     pub apns_team_id: Option<String>,
 
     // FCM
-    #[cfg(not(feature = "multitenant"))]
-    pub fcm_api_key: Option<String>,
+    // No legacy `fcm_api_key`: the legacy FCM HTTP API is decommissioned, so a
+    // single-tenant deployment configures FCM_V1_CREDENTIALS instead.
     #[cfg(not(feature = "multitenant"))]
     pub fcm_v1_credentials: Option<String>,
 
@@ -124,7 +124,7 @@ impl Config {
             supported.push(ProviderKind::ApnsSandbox);
         }
 
-        if self.fcm_api_key.is_some() || self.fcm_v1_credentials.is_some() {
+        if self.fcm_v1_credentials.is_some() {
             supported.push(ProviderKind::Fcm);
         }
 

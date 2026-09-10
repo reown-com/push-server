@@ -26,13 +26,7 @@ pub enum Error {
     ApnsResponse(a2::ErrorReason),
 
     #[error(transparent)]
-    Fcm(#[from] fcm::FcmError),
-
-    #[error(transparent)]
     FcmV1(#[from] fcm_v1::SendError),
-
-    #[error("FCM Responded with an error")]
-    FcmResponse(fcm::ErrorReason),
 
     #[error("FCM v1 Responded with an error")]
     FcmV1Response(fcm_v1::ErrorReason),
@@ -172,8 +166,12 @@ pub enum Error {
     #[error("tenant id and client's registered tenant didn't match")]
     MissmatchedTenantId,
 
-    #[error("Invalid FCM API key")]
-    BadFcmApiKey,
+    /// Legacy FCM ("server key") credentials: Google decommissioned the legacy FCM
+    /// HTTP API in June 2024, so such a key can neither be validated nor used to
+    /// deliver. Returned when one is submitted, and when a tenant carrying only a
+    /// legacy key needs a provider built.
+    #[error("legacy FCM server keys are no longer supported, use FCM v1")]
+    LegacyFcmApiRetired,
 
     #[error("Invalid FCM v1 credentials")]
     BadFcmV1Credentials,
@@ -233,27 +231,15 @@ impl IntoResponse for Error {
                     message: "Failed to validate the provided Certificate or Token".to_string(),
                 }
             ], vec![]),
-            Error::Fcm(e) => crate::handlers::Response::new_failure(StatusCode::INTERNAL_SERVER_ERROR, vec![
+            Error::LegacyFcmApiRetired => crate::handlers::Response::new_failure(StatusCode::GONE, vec![
                 ResponseError {
-                    name: "fcm".to_string(),
-                    message: e.to_string(),
-                }
-            ], vec![]),
-            Error::FcmResponse(e) => crate::handlers::Response::new_failure(StatusCode::INTERNAL_SERVER_ERROR, vec![
-                ResponseError {
-                    name: "fcm_response".to_string(),
-                    message: format!("{:?}", e)
-                }
-            ], vec![]),
-            Error::BadFcmApiKey => crate::handlers::Response::new_failure(StatusCode::BAD_REQUEST, vec![
-                ResponseError {
-                    name: "bad_fcm_api_key".to_string(),
-                    message: "The provided API Key was not valid".to_string(),
+                    name: "legacy_fcm_api_retired".to_string(),
+                    message: "Legacy FCM server keys are no longer supported: Google decommissioned the legacy FCM HTTP API. Register a service account key with POST /:id/fcm_v1 instead".to_string(),
                 }
             ], vec![
                 ErrorField {
                     field: "api_key".to_string(),
-                    description: "The provided API Key was not valid".to_string(),
+                    description: "Legacy FCM server keys can no longer be used to send notifications; use fcm_v1_credentials".to_string(),
                     location: ErrorLocation::Body,
                 }
             ]),
