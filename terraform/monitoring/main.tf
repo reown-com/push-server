@@ -5,79 +5,15 @@ locals {
   load_balancer = join("/", slice(split("/", var.load_balancer_arn), 1, 4))
 }
 
-module "monitoring-role" {
-  source          = "app.terraform.io/wallet-connect/monitoring-role/aws"
-  version         = "1.1.0"
-  context         = module.this
-  remote_role_arn = var.monitoring_role_arn
-}
-
-resource "grafana_data_source" "prometheus" {
-  type = "prometheus"
-  name = "${var.app_name}-amp"
-  url  = "https://aps-workspaces.eu-central-1.amazonaws.com/workspaces/${var.prometheus_workspace_id}/"
-
-  json_data_encoded = jsonencode({
-    httpMethod         = "GET"
-    manageAlerts       = false
-    sigV4Auth          = true
-    sigV4AuthType      = "ec2_iam_role"
-    sigV4Region        = "eu-central-1"
-    sigV4AssumeRoleArn = module.monitoring-role.iam_role_arn
-  })
-}
-
-resource "grafana_data_source" "cloudwatch" {
-  type = "cloudwatch"
-  name = "${var.app_name}-cloudwatch"
-
-  json_data_encoded = jsonencode({
-    defaultRegion = "eu-central-1"
-    assumeRoleArn = module.monitoring-role.iam_role_arn
-  })
-}
-
-data "jsonnet_file" "dashboard" {
-  source = "${path.module}/dashboard.jsonnet"
-
-  ext_str = {
-    dashboard_title = "Push Server - ${title(var.environment)}"
-    dashboard_uid   = "push-${var.environment}"
-
-    prometheus_uid = grafana_data_source.prometheus.uid
-    cloudwatch_uid = grafana_data_source.cloudwatch.uid
-
-    environment   = var.environment
-    notifications = jsonencode(var.notification_channels)
-  }
-}
-
-resource "grafana_dashboard" "push_server" {
-  overwrite   = true
-  message     = "Updated by Terraform"
-  config_json = data.jsonnet_file.dashboard.rendered
-}
-
 ################################################################
+# Grafana dashboard + datasources (provider = grafana.cloud).
+# push is dashboards-only: no alert rules, no folder, no incident route.
 ################################################################
-# GRAFANA CLOUD TWINS (migration dual-run)
-# Byte-identical copies of the AMG resources above,
-# provider = grafana.cloud. AMG blocks above remain the live
-# paging path until this unit's route source-flip. At AMG
-# teardown the AMG blocks above are deleted; these twins remain.
-################################################################
-################################################################
-# NOTE: push is DASHBOARDS-ONLY (0 alert rules, no folder, no rule group, no incident
-# route). There is no later route source-flip for this unit — it completes at dashboard
-# parity + sign-off. The banner's "paging path" wording is the shared template; push does
-# not page. The AMG blocks above are still deleted at teardown; these twins remain.
 
-# Dedicated CREATE_ROLE for Grafana Cloud. NOT ADD_TRUST on the AMG-era
-# eu-central-1-<env>-push-monitoring role: that role is destroyed at AMG teardown, which
-# would break Cloud. This Cloud-only role survives teardown. It carries BOTH CloudWatch
-# read AND aps:Query* (push has an AMP datasource).
-# CONFUSED-DEPUTY GUARD: the trust pins sts:ExternalId so only our Grafana Cloud stack can
-# assume it. Principal + ExternalId read from the live mx-prod-grafana-cloudwatch trust.
+# Dedicated role Grafana Cloud assumes for its datasources. It carries BOTH CloudWatch read
+# AND aps:Query* (push has an AMP datasource).
+# CONFUSED-DEPUTY GUARD: the trust pins sts:ExternalId so only our Grafana Cloud stack
+# can assume it.
 locals {
   grafana_cloud_role_name = "push-${var.environment}-grafana-cloudwatch"
   cloud_prometheus_uid    = { prod = "wBlpDqaNk", staging = "7EUBUu-Nk" }[var.environment]
@@ -130,9 +66,8 @@ resource "aws_iam_role_policy" "grafana_cloud_amp_read" {
   })
 }
 
-# Cloud AMP reader — twin of grafana_data_source.prometheus. uid preserved (== AMG uid) so
-# the dashboard's prometheus_uid resolves unchanged. Grafana Cloud assumes the dedicated
-# role via grafana_assume_role (instead of the AMG monitoring-role's ec2_iam_role).
+# AMP reader. Grafana Cloud assumes the dedicated role via grafana_assume_role; uid is
+# pinned so the dashboard's prometheus_uid resolves unchanged.
 resource "grafana_data_source" "cloud_prometheus" {
   provider = grafana.cloud
 
@@ -161,7 +96,7 @@ resource "grafana_data_source" "cloud_prometheus" {
   depends_on = [aws_iam_role_policy.grafana_cloud_amp_read]
 }
 
-# Cloud CloudWatch — twin of grafana_data_source.cloudwatch. uid preserved.
+# CloudWatch datasource. uid pinned.
 resource "grafana_data_source" "cloud_cloudwatch" {
   provider = grafana.cloud
 
@@ -178,8 +113,7 @@ resource "grafana_data_source" "cloud_cloudwatch" {
   depends_on = [aws_iam_role_policy_attachment.grafana_cloud_cloudwatch]
 }
 
-# Dashboard twin — same dashboard.jsonnet, uids point at the Cloud datasources
-# (teardown-safe). Preserved uids -> byte-identical rendered config_json. No folder.
+# Render dashboard.jsonnet; prometheus_uid / cloudwatch_uid reference the datasources. No folder.
 data "jsonnet_file" "dashboard_cloud" {
   source = "${path.module}/dashboard.jsonnet"
 
