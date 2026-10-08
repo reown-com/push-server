@@ -12,15 +12,15 @@ provider "aws" {
   }
 }
 
+# AMG workspace provider. All AMG resources have been removed; this block is kept only so
+# the AMG resources deleted in this change can be destroyed on apply. Remove it (and the
+# `grafana = grafana` pass in main.tf) in a follow-up once those destroys have applied.
 provider "grafana" {
-  url  = "https://${data.terraform_remote_state.monitoring.outputs.grafana_workspaces.central.grafana_endpoint}"
+  url  = "https://g-aa89c04cfd.grafana-workspace.eu-central-1.amazonaws.com"
   auth = var.grafana_auth
 }
 
-# AMG -> Grafana Cloud migration dual-run (approach A): a SECOND grafana provider
-# instance aliased "cloud", alongside the default AMG provider above. Same module, same
-# TFC workspace, same state. AMG resources stay on the default provider; the Grafana
-# Cloud twins take provider = grafana.cloud. Removed once AMG is torn down.
+# Grafana Cloud provider (aliased).
 provider "grafana" {
   alias = "cloud"
   url   = var.grafana_cloud_url

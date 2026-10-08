@@ -187,9 +187,9 @@ module "ecs" {
 module "monitoring" {
   source = "./monitoring"
 
-  # AMG -> Grafana Cloud migration dual-run: pass the aliased grafana.cloud (aliased
-  # providers are never auto-inherited). default grafana -> AMG, grafana.cloud -> Cloud.
-  # The default aws (wc-main) is inherited automatically.
+  # The default `grafana` provider is the AMG workspace; it is still handed to the module so
+  # the AMG resources removed in this change can be destroyed on apply. Remove the AMG
+  # provider (here and in provider.tf) in a follow-up once the AMG resources are destroyed.
   providers = {
     grafana       = grafana
     grafana.cloud = grafana.cloud
@@ -202,8 +202,7 @@ module "monitoring" {
   environment              = local.environment
   notification_channels    = var.notification_channels
 
-  region              = var.region
-  monitoring_role_arn = data.terraform_remote_state.monitoring.outputs.grafana_workspaces.central.iam_role_arn
+  region = var.region
 }
 
 data "aws_ecr_repository" "repository" {
