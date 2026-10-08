@@ -324,7 +324,7 @@ impl IntoResponse for Error {
                     StatusCode::NOT_FOUND,
                     vec![],
                     vec![ErrorField {
-                        field: format!("{}.id", &entity),
+                        field: format!("{}.id", entity),
                         description: format!("Cannot find {entity} with specified identifier {id}"),
                         location: ErrorLocation::Body,
                     }],
@@ -333,24 +333,24 @@ impl IntoResponse for Error {
             Error::ProviderNotFound(p) => crate::handlers::Response::new_failure(StatusCode::BAD_REQUEST, vec![
                 ResponseError {
                     name: "provider_not_available".to_string(),
-                    message: format!("The requested provider ({}) is not a valid provider", &p),
+                    message: format!("The requested provider ({}) is not a valid provider", p),
                 }
             ], vec![
                 ErrorField {
                     field: "provider".to_string(),
-                    description: format!("The requested provider ({}) is not a valid provider", &p),
+                    description: format!("The requested provider ({}) is not a valid provider", p),
                     location: ErrorLocation::Body,
                 }
             ]),
             Error::ProviderNotAvailable(p) => crate::handlers::Response::new_failure(StatusCode::BAD_REQUEST, vec![
                 ResponseError {
                     name: "provider_not_available".to_string(),
-                    message: format!("The requested provider ({}) is not currently available", &p),
+                    message: format!("The requested provider ({}) is not currently available", p),
                 }
             ], vec![
                 ErrorField {
                     field: "provider".to_string(),
-                    description: format!("The requested provider ({}) is not currently available", &p),
+                    description: format!("The requested provider ({}) is not currently available", p),
                     location: ErrorLocation::Body,
                 }
             ]),
@@ -398,12 +398,12 @@ impl IntoResponse for Error {
             Error::InvalidTenantId(id) => crate::handlers::Response::new_failure(StatusCode::BAD_REQUEST, vec![
                 ResponseError {
                     name: "tenant".to_string(),
-                    message: format!("The provided Tenant ID, {}, is invalid. Please ensure it's valid and the url is in the format /:tenant_id/...path", &id),
+                    message: format!("The provided Tenant ID, {}, is invalid. Please ensure it's valid and the url is in the format /:tenant_id/...path", id),
                 }
             ], vec![
                 ErrorField {
                     field: "tenant_id".to_string(),
-                    description: format!("Invalid Tenant ID, {}", &id),
+                    description: format!("Invalid Tenant ID, {}", id),
                     location: ErrorLocation::Path,
                 }
             ]),
