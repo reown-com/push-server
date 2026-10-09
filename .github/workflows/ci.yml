@@ -82,7 +82,8 @@ jobs:
             cmd: fmt
             args: -- --check
             cache: {}
-            rustc: nightly
+            # Pinned stable (rust-toolchain.toml). rustfmt.toml uses only stable settings.
+            rustc: stable
           - name: "Unit Tests"
             cmd: test
             args: --features multitenant,analytics,geoblock,functional_tests,apns_tests,fcm_tests,fcmv1_tests

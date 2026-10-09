@@ -1,3 +1,8 @@
+// `#[async_trait]` expands each trait method with a generated `#[must_use]`, which clippy's
+// `double_must_use` then flags because the async return type is already `#[must_use]`. The
+// attribute is produced by the macro and cannot be removed at the source, so allow it crate-wide.
+#![allow(clippy::double_must_use)]
+
 #[cfg(feature = "geoblock")]
 use wc::geoip::block::{middleware::GeoBlockLayer, BlockingPolicy};
 #[cfg(any(feature = "analytics", feature = "geoblock"))]

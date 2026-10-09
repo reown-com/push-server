@@ -6,6 +6,9 @@
 FROM               rust:buster AS chef
 
 WORKDIR             /app
+# Build cargo-chef with the pinned toolchain. The base image's Rust is too old for recent
+# cargo-chef. Later stages inherit this file via `FROM chef`, so cook/build use 1.99.0 too.
+COPY                rust-toolchain.toml ./
 RUN                 cargo install cargo-chef
 
 ################################################################################
