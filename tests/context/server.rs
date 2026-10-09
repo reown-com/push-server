@@ -14,9 +14,6 @@ pub struct EchoServer {
     is_shutdown: bool,
 }
 
-#[derive(Debug, thiserror::Error)]
-pub enum Error {}
-
 impl EchoServer {
     pub async fn start(config: Config) -> Self {
         let (public_addr, signal, is_shutdown) = start_server(config).await;
