@@ -3,7 +3,7 @@
 # Install cargo-chef
 #
 ################################################################################
-FROM               rust:buster AS chef
+FROM               rust:bookworm AS chef
 
 WORKDIR             /app
 # Build cargo-chef with the pinned toolchain. The base image's Rust is too old for recent
@@ -61,7 +61,7 @@ RUN                 cargo build --bin echo-server --release
 # Runtime image
 #
 ################################################################################
-FROM               debian:buster-slim AS runtime
+FROM               debian:bookworm-slim AS runtime
 
 COPY --from=build   /tini /tini
 
