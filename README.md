@@ -12,13 +12,11 @@ This list contains both supported and potentially planned providers
 ## Supporting Notifications
 > **Note** Full documentation will be available soon. This is only a brief overview.
 
-There are 3 options for receiving notifications within your wallet:
-1. **Use the hosted platform.**
-   Go to settings in the [cloud app](https://cloud.walletconnect.com) for a project and create a Push URL, see the documentation on Push
-   prerequisites for more info.
-2. Host this rust implementation.
+Go to settings in the [WalletConnect Dashboard](https://dashboard.walletconnect.com) for your wallet project and add the Push URL.
+There are 2 options for receiving notifications within your wallet:
+1. Host this rust implementation.
    there is an included [`terraform`](https://github.com/WalletConnect/echo-server/tree/main/terraform) configuration to help with this.
-3. Write your own implementation that follows the [spec](https://docs.walletconnect.com/2.0/specs/servers/echo/echo-server-api)
+2. Write your own implementation that follows the [spec](https://docs.walletconnect.com/2.0/specs/servers/echo/echo-server-api)
 
 When using the hosted platform or self-hosting this implementation you have to provide the instance
 you FCM API Key or APNS certificates and then - following the FCM/APNS docs - add support for that within your
