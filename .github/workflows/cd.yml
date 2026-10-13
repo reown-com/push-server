@@ -69,15 +69,23 @@ jobs:
         with:
           environment: "staging"
 
+      # echo-server-* are remote-execution TFC workspaces: runner-side TF_VAR_* never
+      # reach the run, and the "remote" backend rejects a non-empty -var-file. Secrets
+      # are TFC workspace variables; image_version goes in an auto file, which is part
+      # of the uploaded configuration. Git ignores *.tfvars.json.
+      - name: Configure Terraform Variables
+        working-directory: terraform
+        env:
+          IMAGE_VERSION: ${{ inputs.image_tag }}
+        run: |
+          jq -n --arg image "$IMAGE_VERSION" '{image_version: $image}' > deploy.auto.tfvars.json
+
       - name: Deploy Terraform to Staging
         id: tf-apply
-        uses: WalletConnect/actions/terraform/apply/@1.0.3
         env:
-          TF_VAR_jwt_secret: ${{ secrets.STAGING_JWT_SECRET }}
-          TF_VAR_image_version: ${{ inputs.image_tag }}
-          TF_VAR_relay_public_key: ${{ secrets.RELAY_PUBLIC_KEY }}
-        with:
-          environment: "staging"
+          TF_WORKSPACE: staging
+          TF_IN_AUTOMATION: "true"
+        run: terraform -chdir=terraform apply -auto-approve -no-color
 
   validate_staging:
     if: ${{ inputs.deploy_to_staging }}
@@ -121,12 +129,17 @@ jobs:
         with:
           environment: "prod"
 
+      # See deploy-infra-staging. notification_channels is a TFC workspace variable too.
+      - name: Configure Terraform Variables
+        working-directory: terraform
+        env:
+          IMAGE_VERSION: ${{ inputs.image_tag }}
+        run: |
+          jq -n --arg image "$IMAGE_VERSION" '{image_version: $image}' > deploy.auto.tfvars.json
+
       - name: Deploy Terraform to Production
         id: tf-apply
-        uses: WalletConnect/actions/terraform/apply/@1.0.3
         env:
-          TF_VAR_jwt_secret: ${{ secrets.PROD_JWT_SECRET }}
-          TF_VAR_image_version: ${{ inputs.image_tag }}
-          TF_VAR_relay_public_key: ${{ secrets.RELAY_PUBLIC_KEY }}
-        with:
-          environment: "prod"
+          TF_WORKSPACE: prod
+          TF_IN_AUTOMATION: "true"
+        run: terraform -chdir=terraform apply -auto-approve -no-color
